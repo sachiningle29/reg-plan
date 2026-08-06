@@ -25,7 +25,10 @@ const route = useRoute();
 const adminMenu = [
   { label: 'Dashboard', to: '/admin/dashboard', icon: 'bi bi-speedometer2' },
   { label: 'Add User', to: '/admin/users/create', icon: 'bi bi-person-plus-fill' },
-  { label: 'Manage Users', to: '/admin/users', icon: 'bi bi-people-fill' },
+
+  { label: 'Import Excel', to: '/admin/plans/import', icon: 'bi bi-file-earmark-arrow-up-fill' },
+
+//   { label: 'Manage Users', to: '/admin/users', icon: 'bi bi-people-fill' },
   { label: 'Rig Details', to: '/admin/rigs', icon: 'bi bi-diagram-3-fill' },
 ];
 

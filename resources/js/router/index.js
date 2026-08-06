@@ -9,6 +9,10 @@ import AdminDashboard from '../pages/admin/AdminDashboard.vue';
 import UserDashboard from '../pages/user/UserDashboard.vue';
 import PlaceholderPage from '../pages/PlaceholderPage.vue';
 
+import PlanImport from '../pages/admin/PlanImport.vue';
+
+import RigDetails from '../pages/admin/RigDetails.vue';
+
 const routes = [
   { path: '/', name: 'home', component: Home },
   { path: '/admin/login', name: 'admin-login', component: AdminLogin },
@@ -20,9 +24,16 @@ const routes = [
     meta: { requiresAuth: true, role: 'admin' },
     children: [
       { path: 'dashboard', name: 'admin-dashboard', component: AdminDashboard },
-      { path: 'users', name: 'admin-users', component: PlaceholderPage, props: { title: 'Manage Users' } },
+
+      // inside the /admin children array:
+      { path: 'plans/import', name: 'admin-plan-import', component: PlanImport },
+
+      // replace this line inside the /admin children array:
+      { path: 'rigs', name: 'admin-rigs', component: RigDetails },
+
+    //   { path: 'users', name: 'admin-users', component: PlaceholderPage, props: { title: 'Manage Users' } },
       { path: 'users/create', name: 'admin-users-create', component: PlaceholderPage, props: { title: 'Add User' } },
-      { path: 'rigs', name: 'admin-rigs', component: PlaceholderPage, props: { title: 'Rig Details' } },
+    // { path: 'rigs', name: 'admin-rigs', component: PlaceholderPage, props: { title: 'Rig Details' } },
     ],
   },
 

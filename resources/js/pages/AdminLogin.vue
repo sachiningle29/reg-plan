@@ -33,8 +33,10 @@ import { ref } from 'vue';
 import { useRouter } from 'vue-router';
 import axios from 'axios';
 import AuthLayout from '../components/AuthLayout.vue';
+import { useAuthStore } from '../stores/auth';
 
 const router = useRouter();
+const auth = useAuthStore();
 const form = ref({ email: '', password: '' });
 const error = ref('');
 const loading = ref(false);
@@ -45,6 +47,7 @@ async function login() {
   try {
     await axios.get('/sanctum/csrf-cookie');
     await axios.post('/api/admin/login', form.value);
+    await auth.fetchUser();          // <-- refresh the store with the new session's user
     router.push('/admin/dashboard');
   } catch (e) {
     error.value = e.response?.data?.message || 'Login failed.';
