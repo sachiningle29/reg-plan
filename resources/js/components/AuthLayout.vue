@@ -2,8 +2,8 @@
   <div class="auth-wrapper">
     <div class="auth-panel d-none d-md-flex flex-column justify-content-between">
       <div>
-        <h2 class="brand">Reg-Plan</h2>
-        <p class="tagline">Regulatory Planning, Simplified.</p>
+        <h2 class="brand">Rig-Plan</h2>
+        <p class="tagline">Rig Deployment Planning, Simplified.</p>
       </div>
       <p class="panel-quote">"Plan smarter. Approve faster. Stay in control."</p>
     </div>
@@ -37,12 +37,53 @@ defineProps({
   display: flex;
   min-height: 100vh;
 }
-.auth-panel {
+/* .auth-panel {
   flex: 1;
   background: linear-gradient(135deg, #0f172a, #1e293b);
   color: #fff;
   padding: 3rem;
+} */
+
+ /* .auth-panel {
+  flex: 1;
+  position: relative;
+  color: #fff;
+  padding: 3rem;
+  background:
+    linear-gradient(180deg, rgba(15, 23, 42, 0.55) 0%, rgba(15, 23, 42, 0.85) 100%),
+    url('/images/rig4.jpg') center center / cover no-repeat;
+} */
+
+.auth-panel {
+  flex: 1.1;
+  position: relative;
+  color: #fff;
+  padding: 3rem;
+
+  background:
+    linear-gradient(180deg, rgba(15, 23, 42, 0.1) 0%, rgba(15, 23, 42, 0.7) 100%),
+    url('/images/rig4.jpg') center center / cover no-repeat;
+
+  image-rendering: -webkit-optimize-contrast;
+  image-rendering: crisp-edges;
+
+  transform: translateZ(0);
+  backface-visibility: hidden;
+
+  /* added zoom property by sachin */
+      background-blend-mode: multiply;
+
+      animation: subtle-zoom 12s ease-in-out infinite alternate;
+
 }
+
+@keyframes subtle-zoom {
+  from { background-size: 100%; }
+  to { background-size: 118%; }
+}
+
+
+
 .brand { font-weight: 700; letter-spacing: 0.5px; }
 .tagline { color: #94a3b8; }
 .panel-quote { color: #cbd5e1; font-style: italic; max-width: 320px; }

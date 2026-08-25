@@ -1,5 +1,5 @@
 <template>
-  <AuthLayout title="Admin Login" subtitle="Sign in to manage Reg-Plan" icon-bg="bg-danger">
+  <AuthLayout title="Admin Login" subtitle="Sign in to manage Rig-Plan" icon-bg="bg-danger">
     <template #icon>
       <i class="bi bi-shield-lock-fill"></i>
     </template>

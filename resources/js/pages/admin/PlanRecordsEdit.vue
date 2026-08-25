@@ -1,0 +1,279 @@
+<template>
+  <div>
+    <div class="d-flex align-items-center gap-3 mb-4">
+      <router-link :to="{ name: 'admin-plan-import' }" class="btn btn-sm btn-light border">
+        <i class="bi bi-arrow-left"></i>
+      </router-link>
+      <div>
+        <h4 class="mb-0">{{ planName }}</h4>
+        <span class="badge bg-success-subtle text-success-emphasis mt-1">
+          <i class="bi bi-check2-circle me-1"></i>Actual Records
+        </span>
+      </div>
+      <span class="text-muted small ms-auto">{{ meta.total ?? 0 }} records</span>
+    </div>
+
+    <div class="card border-0 shadow-sm mb-3">
+      <div class="card-body">
+        <input v-model="search" @input="debouncedSearch" type="text" class="form-control"
+               placeholder="Search rig, asset, or well name..." />
+      </div>
+    </div>
+
+    <div class="card border-0 shadow-sm">
+      <div class="table-responsive">
+        <table class="table table-hover align-middle mb-0">
+          <thead class="table-light">
+            <tr>
+              <th>Rig Name</th>
+              <th>Asset</th>
+              <th>Platform</th>
+              <th>Well Name</th>
+              <th>Status</th>
+              <th>Start Date</th>
+              <th>Finish Date</th>
+              <th class="text-center">Edit</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr v-if="loading">
+              <td colspan="8" class="text-center text-muted py-4">Loading...</td>
+            </tr>
+            <tr v-else-if="!rows.length">
+              <td colspan="8" class="text-center text-muted py-4">No records found</td>
+            </tr>
+            <tr v-for="r in rows" :key="r.id">
+              <td class="fw-semibold">{{ r.rig_name }}</td>
+              <td>{{ r.asset }}</td>
+              <td>{{ r.platform }}</td>
+              <td>{{ r.well_name }}</td>
+              <td><span class="badge" :class="statusBadge(r.status)">{{ r.status || '—' }}</span></td>
+              <td>{{ formatDate(r.start_date) }}</td>
+              <td>{{ formatDate(r.finish_date) }}</td>
+              <td class="text-center">
+                <button class="btn btn-sm btn-outline-primary" @click="openEdit(r)">
+                  <i class="bi bi-pencil-square"></i>
+                </button>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div class="card-footer bg-white d-flex justify-content-between align-items-center" v-if="meta.last_page > 1">
+        <span class="text-muted small">Page {{ meta.current_page }} of {{ meta.last_page }}</span>
+        <div class="btn-group btn-group-sm">
+          <button class="btn btn-outline-secondary" :disabled="meta.current_page <= 1" @click="load(meta.current_page - 1)">
+            <i class="bi bi-chevron-left"></i>
+          </button>
+          <button class="btn btn-outline-secondary" :disabled="meta.current_page >= meta.last_page" @click="load(meta.current_page + 1)">
+            <i class="bi bi-chevron-right"></i>
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Edit Modal -->
+    <div class="modal fade" tabindex="-1" ref="modalEl">
+      <div class="modal-dialog modal-lg modal-dialog-scrollable">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h5 class="modal-title"><i class="bi bi-pencil-square me-2"></i>Edit Record</h5>
+            <button type="button" class="btn-close" @click="closeEdit"></button>
+          </div>
+          <div class="modal-body" v-if="editForm">
+            <div class="section-label">Identification</div>
+            <div class="row g-3 mb-4">
+              <div class="col-md-6">
+                <label class="form-label small text-muted">Rig Name</label>
+                <input v-model="editForm.rig_name" type="text" class="form-control" required />
+              </div>
+              <div class="col-md-6">
+                <label class="form-label small text-muted">Asset</label>
+                <input v-model="editForm.asset" type="text" class="form-control" />
+              </div>
+              <div class="col-md-6">
+                <label class="form-label small text-muted">Platform</label>
+                <input v-model="editForm.platform" type="text" class="form-control" />
+              </div>
+              <div class="col-md-6">
+                <label class="form-label small text-muted">Well Name</label>
+                <input v-model="editForm.well_name" type="text" class="form-control" />
+              </div>
+              <div class="col-md-6">
+                <label class="form-label small text-muted">Type</label>
+                <input v-model="editForm.type" type="text" class="form-control" />
+              </div>
+              <div class="col-md-6">
+                <label class="form-label small text-muted">WI Well</label>
+                <input v-model="editForm.wi_well" type="text" class="form-control" />
+              </div>
+            </div>
+
+            <div class="section-label">Schedule</div>
+            <div class="row g-3 mb-4">
+              <div class="col-md-4">
+                <label class="form-label small text-muted">Start Date</label>
+                <input v-model="editForm.start_date" type="date" class="form-control" />
+              </div>
+              <div class="col-md-4">
+                <label class="form-label small text-muted">Finish Date</label>
+                <input v-model="editForm.finish_date" type="date" class="form-control" />
+              </div>
+              <div class="col-md-4">
+                <label class="form-label small text-muted">Days</label>
+                <input v-model="editForm.days" type="number" class="form-control" />
+              </div>
+              <div class="col-md-6">
+                <label class="form-label small text-muted">Status</label>
+                <input v-model="editForm.status" type="text" class="form-control" placeholder="e.g. C" />
+              </div>
+              <div class="col-md-6">
+                <label class="form-label small text-muted">Activity</label>
+                <input v-model="editForm.activity" type="text" class="form-control" />
+              </div>
+            </div>
+
+            <div class="section-label">Metrics</div>
+            <div class="row g-3">
+              <div class="col-md-4">
+                <label class="form-label small text-muted">Meters</label>
+                <input v-model="editForm.meters" type="number" step="0.01" class="form-control" />
+              </div>
+              <div class="col-md-4">
+                <label class="form-label small text-muted">Oil Gain</label>
+                <input v-model="editForm.oil_gain" type="number" step="0.01" class="form-control" />
+              </div>
+              <div class="col-md-4">
+                <label class="form-label small text-muted">Gas Gain</label>
+                <input v-model="editForm.gas_gain" type="number" step="0.01" class="form-control" />
+              </div>
+            </div>
+
+            <div v-if="saveError" class="alert alert-danger py-2 mt-3 mb-0">{{ saveError }}</div>
+          </div>
+          <div class="modal-footer">
+            <button class="btn btn-light" @click="closeEdit">Cancel</button>
+            <button class="btn btn-primary" :disabled="saving" @click="saveEdit">
+              <i class="bi bi-check2 me-1"></i>{{ saving ? 'Saving...' : 'Save Changes' }}
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</template>
+
+<script setup>
+import { ref, onMounted, computed } from 'vue';
+import { useRoute } from 'vue-router';
+import axios from 'axios';
+import { Modal } from 'bootstrap';
+
+const route = useRoute();
+const planName = computed(() => route.query.plan_name || '');
+const recordType = computed(() => route.query.record_type || 'actual');
+
+const rows = ref([]);
+const meta = ref({});
+const loading = ref(false);
+const search = ref('');
+let searchTimeout = null;
+
+const modalEl = ref(null);
+let modalInstance = null;
+const editForm = ref(null);
+const saving = ref(false);
+const saveError = ref('');
+
+async function load(page = 1) {
+  loading.value = true;
+  try {
+    const { data } = await axios.get('/api/rig-details', {
+      params: { plan_name: planName.value, record_type: recordType.value, search: search.value, page },
+    });
+    rows.value = data.data;
+    meta.value = { current_page: data.current_page, last_page: data.last_page, total: data.total };
+  } finally {
+    loading.value = false;
+  }
+}
+
+function debouncedSearch() {
+  clearTimeout(searchTimeout);
+  searchTimeout = setTimeout(() => load(1), 400);
+}
+
+function formatDate(date) {
+  if (!date) return '—';
+  return new Date(date).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' });
+}
+
+function statusBadge(status) {
+  return (status || '').toString().toUpperCase().trim() === 'C' ? 'bg-success' : 'bg-light text-dark border';
+}
+
+function toDateInput(value) {
+  if (!value) return '';
+  return new Date(value).toISOString().slice(0, 10);
+}
+
+function openEdit(record) {
+  editForm.value = {
+    id: record.id,
+    rig_name: record.rig_name || '',
+    asset: record.asset || '',
+    platform: record.platform || '',
+    well_name: record.well_name || '',
+    type: record.type || '',
+    wi_well: record.wi_well || '',
+    days: record.days ?? '',
+    status: record.status || '',
+    activity: record.activity || '',
+    start_date: toDateInput(record.start_date),
+    finish_date: toDateInput(record.finish_date),
+    meters: record.meters ?? '',
+    oil_gain: record.oil_gain ?? '',
+    gas_gain: record.gas_gain ?? '',
+  };
+  saveError.value = '';
+  modalInstance.show();
+}
+
+function closeEdit() {
+  modalInstance.hide();
+}
+
+async function saveEdit() {
+  saving.value = true;
+  saveError.value = '';
+  try {
+    const { data } = await axios.put(`/api/rig-details/${editForm.value.id}`, editForm.value);
+    const idx = rows.value.findIndex((r) => r.id === editForm.value.id);
+    if (idx !== -1) rows.value[idx] = data.record;
+    modalInstance.hide();
+  } catch (e) {
+    saveError.value = e.response?.data?.message || 'Failed to save changes.';
+  } finally {
+    saving.value = false;
+  }
+}
+
+onMounted(() => {
+  modalInstance = new Modal(modalEl.value);
+  load();
+});
+</script>
+
+<style scoped>
+.section-label {
+  font-size: 0.75rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: #64748b;
+  margin-bottom: 0.75rem;
+  padding-bottom: 0.35rem;
+  border-bottom: 1px solid #eef2f7;
+}
+</style>

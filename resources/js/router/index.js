@@ -13,6 +13,18 @@ import PlanImport from '../pages/admin/PlanImport.vue';
 
 import RigDetails from '../pages/admin/RigDetails.vue';
 
+import PlanRecordsEdit from '../pages/admin/PlanRecordsEdit.vue';
+
+
+
+import AddUser from '../pages/admin/AddUser.vue';
+
+import ManageUsers from '../pages/admin/ManageUsers.vue';
+
+// import WellMaterialsConsumable from '../pages/admin/WellMaterialsConsumable.vue';
+
+import WellMaterials from '../pages/admin/WellMaterials.vue';
+
 const routes = [
   { path: '/', name: 'home', component: Home },
   { path: '/admin/login', name: 'admin-login', component: AdminLogin },
@@ -32,8 +44,21 @@ const routes = [
       { path: 'rigs', name: 'admin-rigs', component: RigDetails },
 
     //   { path: 'users', name: 'admin-users', component: PlaceholderPage, props: { title: 'Manage Users' } },
-      { path: 'users/create', name: 'admin-users-create', component: PlaceholderPage, props: { title: 'Add User' } },
+    //  { path: 'users/create', name: 'admin-users-create', component: PlaceholderPage, props: { title: 'Add User' } },
     // { path: 'rigs', name: 'admin-rigs', component: PlaceholderPage, props: { title: 'Rig Details' } },
+
+      { path: 'plans/edit', name: 'admin-plan-edit', component: PlanRecordsEdit },
+
+
+
+      { path: 'users', name: 'admin-users', component: ManageUsers },
+
+      { path: 'users/create', name: 'admin-users-create', component: AddUser },
+
+    //   { path: 'well-materials', name: 'admin-well-materials', component: WellMaterials },
+
+    { path: 'well-materials', name: 'admin-well-materials', component: WellMaterials },
+
     ],
   },
 

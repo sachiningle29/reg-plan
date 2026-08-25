@@ -1,11 +1,11 @@
 <template>
   <div class="welcome-page">
     <nav class="navbar px-4 py-3">
-      <span class="navbar-brand fw-bold text-white">Reg-Plan</span>
+      <span class="navbar-brand fw-bold text-white">Rig-Plan</span>
     </nav>
 
     <div class="hero d-flex flex-column align-items-center justify-content-center text-center text-white px-3">
-      <h1 class="display-5 fw-bold mb-3">Regulatory Planning, Made Simple</h1>
+      <h1 class="display-5 fw-bold mb-3">Rig Deployment Planning, Made Simple</h1>
       <p class="lead mb-5 col-md-6">
         Manage contracts, track approvals, and collaborate — all in one place.
       </p>
