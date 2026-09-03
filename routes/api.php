@@ -12,6 +12,8 @@ use App\Http\Controllers\Api\UserController;
 
 use App\Http\Controllers\Api\WellMaterialController;
 
+use App\Http\Controllers\Api\MaterialRequirementController;
+
 
 Route::post('/admin/login', [AuthController::class, 'adminLogin']);
 Route::post('/user/login', [AuthController::class, 'userLogin']);
@@ -59,10 +61,6 @@ Route::middleware('auth:sanctum')->group(function () {
     //end
 
 
-    // Route::get('/well-materials/assets', [WellMaterialController::class, 'assets']);
-    // Route::get('/well-materials/wells', [WellMaterialController::class, 'wells']);
-    // Route::get('/well-materials/date-range', [WellMaterialController::class, 'dateRange']);
-    // Route::get('/well-materials/consumables', [WellMaterialController::class, 'consumables']);
 
     Route::get('/well-materials/assets', [WellMaterialController::class, 'assets']);
     Route::get('/well-materials/wells', [WellMaterialController::class, 'wells']);
@@ -72,6 +70,11 @@ Route::middleware('auth:sanctum')->group(function () {
 
     Route::post('/well-materials/import', [WellMaterialController::class, 'import']);
 
+
+    // Route::get('/well-materials/rig-assets', [WellMaterialController::class, 'rigAssets']);
+    Route::get('/well-materials/template', [WellMaterialController::class, 'template']);
+
+    Route::get('/material-requirements', [MaterialRequirementController::class, 'index']);
 });
 
 });

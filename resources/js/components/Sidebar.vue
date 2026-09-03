@@ -35,6 +35,10 @@ const adminMenu = [
 //   { label: 'Well Materials', to: '/admin/well-materials', icon: 'bi bi-boxes' },
 
   { label: 'Well Materials', to: '/admin/well-materials', icon: 'bi bi-box-seam-fill' },
+
+  { label: 'Material Requirement', to: '/admin/material-requirement', icon: 'bi bi-clipboard-data-fill' },
+
+
 ];
 
 const userMenu = [

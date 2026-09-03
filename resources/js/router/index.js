@@ -25,6 +25,11 @@ import ManageUsers from '../pages/admin/ManageUsers.vue';
 
 import WellMaterials from '../pages/admin/WellMaterials.vue';
 
+
+import MaterialRequirement from '../pages/admin/MaterialRequirement.vue';
+
+
+
 const routes = [
   { path: '/', name: 'home', component: Home },
   { path: '/admin/login', name: 'admin-login', component: AdminLogin },
@@ -58,6 +63,8 @@ const routes = [
     //   { path: 'well-materials', name: 'admin-well-materials', component: WellMaterials },
 
     { path: 'well-materials', name: 'admin-well-materials', component: WellMaterials },
+
+    { path: 'material-requirement', name: 'admin-material-requirement', component: MaterialRequirement },
 
     ],
   },

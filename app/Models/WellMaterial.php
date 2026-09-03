@@ -16,5 +16,6 @@ class WellMaterial extends Model
         'well_name',
         'hptp',
         'item_name',
+        'quantity',
     ];
 }

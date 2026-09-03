@@ -3,180 +3,59 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
+use App\Models\RigDetail;
 use App\Models\WellMaterial;
+use App\Services\WellMaterialsWideImporter;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\DB;
-
-
-use App\Services\WellMaterialsImporter;
 
 class WellMaterialController extends Controller
 {
-    // // The shared starting point for every endpoint below — one definition
-    // // of "how materials match to planned rig work" that can't drift out
-    // // of sync between the dropdown filters and the main table.
-    // protected function baseQuery(Request $request)
-    // {
-    //     $query = DB::table('well_materials as wm')
-    //         ->join('rig_details as rd', 'rd.well_name', '=', 'wm.well_name')
-    //         ->where('rd.record_type', 'planned');
-
-    //     if ($request->filled('asset')) {
-    //         $query->where('wm.asset_name', $request->asset);
-    //     }
-    //     if ($request->filled('well')) {
-    //         $query->where('wm.well_name', $request->well);
-    //     }
-    //     if ($request->filled('quarters')) {
-    //         $quarters = $request->input('quarters');
-    //         $query->where(function ($q) use ($quarters) {
-    //             foreach ($quarters as $range) {
-    //                 if (!empty($range['from']) && !empty($range['to'])) {
-    //                     $q->orWhereBetween('rd.start_date', [$range['from'], $range['to']]);
-    //                 }
-    //             }
-    //         });
-    //     }
-
-    //     return $query;
-    // }
+    // --- Filters (Asset / Wells) — unchanged, per your request ---
 
     // public function assets()
     // {
-    //     return WellMaterial::query()->select('asset_name')->distinct()->orderBy('asset_name')->pluck('asset_name');
+    //     return WellMaterial::query()
+    //         ->select('asset_name')->distinct()
+    //         ->orderBy('asset_name')
+    //         ->pluck('asset_name');
     // }
 
     // public function wells(Request $request)
     // {
     //     $query = WellMaterial::query()->select('well_name')->distinct();
+
     //     if ($request->filled('asset')) {
     //         $query->where('asset_name', $request->asset);
     //     }
+
     //     return $query->orderBy('well_name')->pluck('well_name');
     // }
 
-    // public function dateRange(Request $request)
-    // {
-    //     // Ignores the quarters filter deliberately — this tells the frontend
-    //     // the full available date span, so it can offer every valid quarter
-    //     // as an option, not just the ones already selected.
-    //     $request2 = $request->except('quarters');
-    //     return response()->json(
-    //         $this->baseQuery(new Request($request2))
-    //             ->selectRaw('MIN(rd.start_date) as min_date, MAX(rd.start_date) as max_date')
-    //             ->first()
-    //     );
-    // }
-
-    // public function index(Request $request)
-    // {
-    //     return $this->baseQuery($request)
-    //         ->select([
-    //             'wm.asset_name as asset',
-    //             'wm.well_name',
-    //             'wm.hptp',
-    //             'rd.type',
-    //             'wm.item_name',
-    //             'rd.meters',
-    //             'rd.start_date',
-    //         ])
-    //         ->orderBy('rd.start_date')
-    //         ->paginate(15)
-    //         ->withQueryString();
-    // }
-
-    //  public function assets()
-    // {
-    //     return response()->json(
-    //         WellMaterial::query()->select('asset_name')->distinct()->orderBy('asset_name')->pluck('asset_name')
-    //     );
-    // }
-
-    // public function wells(Request $request)
-    // {
-    //     $query = WellMaterial::query()->select('well_name')->distinct();
-
-    //     if ($request->filled('asset')) {
-    //         $query->where('asset_name', $request->asset);
-    //     }
-
-    //     return response()->json($query->orderBy('well_name')->pluck('well_name'));
-    // }
-
-    // public function dateRange(Request $request)
-    // {
-    //     $range = $this->baseJoin($request)
-    //         ->selectRaw('MIN(rig_details.start_date) as min_date, MAX(rig_details.start_date) as max_date')
-    //         ->first();
-
-    //     return response()->json($range);
-    // }
-
-    // public function consumables(Request $request)
-    // {
-    //     $query = $this->baseJoin($request)->select([
-    //         'well_materials.asset_name as asset',
-    //         'well_materials.well_name',
-    //         'well_materials.hptp',
-    //         'rig_details.type as types',
-    //         'well_materials.item_name',
-    //         'rig_details.meters',
-    //         'rig_details.start_date',
-    //     ]);
-
-    //     if ($request->filled('periods')) {
-    //         $periods = json_decode($request->input('periods'), true) ?: [];
-    //         if (!empty($periods)) {
-    //             $query->where(function ($q) use ($periods) {
-    //                 foreach ($periods as $p) {
-    //                     if (!empty($p['from']) && !empty($p['to'])) {
-    //                         $q->orWhereBetween('rig_details.start_date', [$p['from'], $p['to']]);
-    //                     }
-    //                 }
-    //             });
-    //         }
-    //     }
-
-    //     return $query->orderBy('rig_details.start_date')->paginate(15)->withQueryString();
-    // }
-
-    // // The single shared query: well_materials joined to rig_details,
-    // // restricted to Planned records only, with optional asset/well filters.
-    // protected function baseJoin(Request $request)
-    // {
-    //     $query = DB::table('well_materials')
-    //         ->join('rig_details', 'rig_details.well_name', '=', 'well_materials.well_name')
-    //         ->where('rig_details.record_type', 'planned')
-    //         ->whereNotNull('rig_details.start_date');
-
-    //     if ($request->filled('asset')) {
-    //         $query->where('well_materials.asset_name', $request->asset);
-    //     }
-    //     if ($request->filled('well')) {
-    //         $query->where('well_materials.well_name', $request->well);
-    //     }
-
-    //     return $query;
-    // }
 
     public function assets()
     {
-        return WellMaterial::query()
-            ->select('asset_name')->distinct()
-            ->orderBy('asset_name')
-            ->pluck('asset_name');
+        return RigDetail::query()
+            ->where('record_type', 'planned')
+            ->whereNotNull('asset')
+            ->distinct()
+            ->orderBy('asset')
+            ->pluck('asset');
     }
 
     public function wells(Request $request)
     {
-        $query = WellMaterial::query()->select('well_name')->distinct();
+        $query = RigDetail::query()
+            ->where('record_type', 'planned')
+            ->whereNotNull('well_name');
 
         if ($request->filled('asset')) {
-            $query->where('asset_name', $request->asset);
+            $query->where('asset', $request->asset);
         }
 
-        return $query->orderBy('well_name')->pluck('well_name');
+        return $query->select('well_name')->distinct()->orderBy('well_name')->pluck('well_name');
     }
+
+    // --- Main report (joined against rig_details, planned only) ---
 
     public function report(Request $request)
     {
@@ -191,15 +70,12 @@ class WellMaterialController extends Controller
                 'well_materials.well_name',
                 'well_materials.hptp',
                 'well_materials.item_name',
+                'well_materials.quantity',
                 'rig_details.type',
                 'rig_details.meters',
-
                 'rig_details.wi_well',
                 'rig_details.status',
-
                 'rig_details.start_date',
-
-
                 'rig_details.finish_date',
             ]);
 
@@ -217,23 +93,81 @@ class WellMaterialController extends Controller
             ->get();
     }
 
+    // --- Template download source (from rig_details, so it works even before any materials exist) ---
 
-
-
-
-    public function import(Request $request, WellMaterialsImporter $importer)
+    public function rigAssets()
     {
-        $request->validate([
-            'file' => 'required|file|mimes:xlsx,xls|max:10240',
+        return RigDetail::query()
+            ->whereNotNull('asset')
+            ->distinct()
+            ->orderBy('asset')
+            ->pluck('asset');
+    }
+
+    // public function template(Request $request)
+    // {
+    //     $request->validate(['asset' => 'required|string']);
+
+    //     $rows = RigDetail::query()
+    //         ->where('asset', $request->asset)
+    //         ->where('record_type', 'planned')
+    //         ->whereNotNull('well_name')
+    //         ->orderBy('well_name')
+    //         ->orderByDesc('start_date')
+    //         ->get(['well_name', 'type', 'wi_well', 'meters']);
+
+    //     $unique = $rows->unique('well_name')->values();
+
+    //     return $unique->map(fn ($r) => [
+    //         'well_name' => $r->well_name,
+    //         'type'      => $r->type,
+    //         'wi_well'   => $r->wi_well,
+    //         'meters'    => $r->meters,
+    //     ]);
+    // }
+
+    public function template(Request $request)
+    {
+        $request->validate(['asset' => 'required|string']);
+
+        $rows = RigDetail::query()
+            ->where('asset', $request->asset)
+            ->where('record_type', 'planned')
+            ->whereNotNull('well_name')
+            ->orderBy('well_name')
+            ->orderByDesc('start_date')
+            ->get(['well_name', 'type', 'wi_well', 'meters', 'start_date']);
+
+        $unique = $rows->unique('well_name')->values();
+
+        return $unique->map(fn ($r) => [
+            'well_name'  => $r->well_name,
+            'type'       => $r->type,
+            'wi_well'    => $r->wi_well,
+            'meters'     => $r->meters,
+            'start_date' => $r->start_date,
+        ]);
+    }
+
+    // --- Wide-format import ---
+
+    public function import(Request $request, WellMaterialsWideImporter $importer)
+    {
+        $validated = $request->validate([
+            'asset'   => 'required|string|max:255',
+            'file'    => 'required|file|mimes:xlsx,xls|max:10240',
+            'replace' => 'nullable|boolean',
         ]);
 
-        $count = $importer->import($request->file('file')->getRealPath());
+        if ($request->boolean('replace')) {
+            WellMaterial::where('asset_name', $validated['asset'])->delete();
+        }
+
+        $count = $importer->import($request->file('file')->getRealPath(), $validated['asset']);
 
         return response()->json([
             'message' => 'Import successful',
             'rows_imported' => $count,
         ]);
     }
-
-
 }
