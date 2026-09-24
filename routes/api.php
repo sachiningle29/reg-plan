@@ -14,6 +14,8 @@ use App\Http\Controllers\Api\WellMaterialController;
 
 use App\Http\Controllers\Api\MaterialRequirementController;
 
+use App\Http\Controllers\Api\MaterialItemController;
+
 
 Route::post('/admin/login', [AuthController::class, 'adminLogin']);
 Route::post('/user/login', [AuthController::class, 'userLogin']);
@@ -75,6 +77,13 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('/well-materials/template', [WellMaterialController::class, 'template']);
 
     Route::get('/material-requirements', [MaterialRequirementController::class, 'index']);
+
+
+    Route::get('/material-items', [MaterialItemController::class, 'index']);
+    Route::post('/material-items', [MaterialItemController::class, 'store']);
+    Route::put('/material-items/{materialItem}', [MaterialItemController::class, 'update']);
+    Route::delete('/material-items/{materialItem}', [MaterialItemController::class, 'destroy']);
+
 });
 
 });

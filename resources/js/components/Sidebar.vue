@@ -29,7 +29,8 @@ const adminMenu = [
   { label: 'Dashboard', to: '/admin/dashboard', icon: 'bi bi-speedometer2' },
   { label: 'Add User', to: '/admin/users/create', icon: 'bi bi-person-plus-fill' },
 //   { label: 'Manage Users', to: '/admin/users', icon: 'bi bi-people-fill' },
-  { label: 'Import Excel', to: '/admin/plans/import', icon: 'bi bi-file-earmark-arrow-up-fill' },
+//   { label: 'Import Excel', to: '/admin/plans/import', icon: 'bi bi-file-earmark-arrow-up-fill' },
+  { label: 'Import Plan', to: '/admin/plans/import', icon: 'bi bi-file-earmark-arrow-up-fill' },
   { label: 'Rig Details', to: '/admin/rigs', icon: 'bi bi-diagram-3-fill' },
 
 //   { label: 'Well Materials', to: '/admin/well-materials', icon: 'bi bi-boxes' },
@@ -37,6 +38,10 @@ const adminMenu = [
   { label: 'Well Materials', to: '/admin/well-materials', icon: 'bi bi-box-seam-fill' },
 
   { label: 'Material Requirement', to: '/admin/material-requirement', icon: 'bi bi-clipboard-data-fill' },
+
+
+  // Sidebar.vue adminMenu
+  { label: 'Manage Item Names', to: '/admin/material-items', icon: 'bi bi-list-check' },
 
 
 ];

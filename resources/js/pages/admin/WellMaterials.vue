@@ -2,6 +2,10 @@
   <div>
     <div class="d-flex justify-content-between align-items-start mb-4 flex-wrap gap-2">
       <div>
+        <router-link :to="{ name: 'admin-material-items' }" class="btn btn-outline-secondary">
+        <i class="bi bi-list-check me-1"></i>Manage Items
+        </router-link>
+
         <h4 class="mb-1">Well Materials Consumable</h4>
         <p class="text-muted small mb-0">Materials matched against each well's planned work schedule</p>
       </div>
@@ -178,6 +182,14 @@ import { quartersBetween } from '../../utils/fiscalPeriods';
 import * as XLSX from 'xlsx';
 import { Modal } from 'bootstrap';
 
+// import { FIXED_ITEM_NAMES } from '../../utils/materialItems';
+
+import ExcelJS from 'exceljs';
+
+
+const materialItems = ref([]); // master list for current `asset`
+
+
 const assetOptions = ref([]);
 const wellOptions = ref([]);
 const asset = ref('');
@@ -247,12 +259,30 @@ async function loadReport() {
 async function refreshAll() {
   loadError.value = '';
   try {
-    await Promise.all([loadWells(), loadTemplateRows()]);
+    // await Promise.all([loadWells(), loadTemplateRows()]);
+    await Promise.all([loadWells(), loadTemplateRows(), loadMaterialItems()]);
     await loadReport();
   } catch (e) {
     loadError.value = e.message;
   }
 }
+
+
+
+
+// async function loadMaterialItems() {
+//   if (!asset.value) { materialItems.value = []; return; }
+//   const { data } = await axios.get('/api/material-items', { params: { asset: asset.value } });
+//   materialItems.value = assertArray(data, 'Material items');
+// }
+
+async function loadMaterialItems() {
+  const { data } = await axios.get('/api/material-items');
+  materialItems.value = assertArray(data, 'Material items');
+}
+
+
+
 
 function onAssetChange() {
   selectedWells.value = [];
@@ -329,30 +359,194 @@ onMounted(async () => {
   }
 });
 
-function downloadTemplate() {
+
+
+// function downloadTemplate() {
+//   if (!filteredTemplateRows.value.length) return;
+
+//   const itemNames = materialItems.value.map((i) => i.item_name);
+
+//   const rows = filteredTemplateRows.value.map((r) => {
+//     const row = {
+//       'Well Name': r.well_name, 'Input Type': r.type || '', 'Well Type': r.wi_well || '',
+//       'HPHT / Non-HPHT': '', 'Meters': r.meters ?? '',
+//     };
+//     itemNames.forEach((name) => { row[name] = ''; });
+//     return row;
+//   });
+
+//   const worksheet = XLSX.utils.json_to_sheet(rows);
+//   worksheet['!cols'] = [{ wch: 16 }, { wch: 12 }, { wch: 12 }, { wch: 16 }, { wch: 10 }, ...itemNames.map(() => ({ wch: 16 }))];
+
+//   const workbook = XLSX.utils.book_new();
+//   XLSX.utils.book_append_sheet(workbook, worksheet, asset.value);
+//   XLSX.writeFile(workbook, `well-materials-template-${asset.value}.xlsx`);
+// }
+
+
+async function downloadWorkbook(headerDefs, dataRows, sheetTitle, filename) {
+  const workbook = new ExcelJS.Workbook();
+  const sheet = workbook.addWorksheet(sheetTitle);
+
+  sheet.columns = headerDefs.map((h) => ({ header: h.label, key: h.key, width: h.width || 16 }));
+
+  const headerRow = sheet.getRow(1);
+  headerRow.eachCell((cell) => {
+    cell.font = { bold: true, color: { argb: 'FFFFFFFF' } };
+    cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FF1F4E78' } };
+    cell.alignment = { vertical: 'middle', horizontal: 'center', wrapText: true };
+    cell.border = { bottom: { style: 'thin', color: { argb: 'FFB0BEC5' } } };
+  });
+  headerRow.height = 32;
+
+  dataRows.forEach((row) => sheet.addRow(row));
+
+  sheet.views = [{ state: 'frozen', xSplit: 5, ySplit: 1 }]; // freeze Well/Type/Type/HPHT/Meters + header row
+  sheet.autoFilter = { from: { row: 1, column: 1 }, to: { row: 1, column: headerDefs.length } };
+
+  const buffer = await workbook.xlsx.writeBuffer();
+  const blob = new Blob([buffer], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = filename;
+  a.click();
+  URL.revokeObjectURL(url);
+}
+
+async function downloadTemplate() {
   if (!filteredTemplateRows.value.length) return;
 
-  const rows = filteredTemplateRows.value.map((r) => ({
-    'Well Name': r.well_name,
-    'Input Type': r.type || '',
-    'Well Type': r.wi_well || '',
-    // 'HPTP / Non-HPTP': '',
-    'HPHT / Non-HPHT': '',
-    'Meters': r.meters ?? '',
-  }));
+  const fixedHeaders = [
+    { key: 'well_name', label: 'Well Name', width: 18 },
+    { key: 'input_type', label: 'Input Type', width: 12 },
+    { key: 'well_type', label: 'Well Type', width: 12 },
+    { key: 'hpht', label: 'HPHT / Non-HPHT', width: 16 },
+    { key: 'meters', label: 'Drilling Meterage', width: 14 },
+  ];
+  const itemHeaders = materialItems.value.map((i) => ({ key: `item_${i.id}`, label: i.item_name, width: 18 }));
 
-  const worksheet = XLSX.utils.json_to_sheet(rows);
-  worksheet['!cols'] = [{ wch: 16 }, { wch: 12 }, { wch: 12 }, { wch: 16 }, { wch: 10 }];
+  const rows = filteredTemplateRows.value.map((r) => {
+    const row = {
+      well_name: r.well_name, input_type: r.type || '', well_type: r.wi_well || '',
+      hpht: '', meters: r.meters ?? '',
+    };
+    itemHeaders.forEach((h) => { row[h.key] = ''; });
+    return row;
+  });
 
-  const workbook = XLSX.utils.book_new();
-  XLSX.utils.book_append_sheet(workbook, worksheet, asset.value);
-  XLSX.writeFile(workbook, `well-materials-template-${asset.value}.xlsx`);
+  await downloadWorkbook([...fixedHeaders, ...itemHeaders], rows, asset.value, `well-materials-template-${asset.value}.xlsx`);
 }
+
 
 function onImportFileChange(e) {
   importFile.value = e.target.files[0] || null;
   importMessage.value = '';
 }
+
+// async function submitImport() {
+//   if (!importFile.value || !importAsset.value) return;
+//   importing.value = true;
+//   importMessage.value = '';
+
+// //   importSuccess.value = true;
+// //   importMessage.value = data.new_items?.length
+// //   ? `Imported ${data.rows_imported} item rows. ${data.new_items.length} new item name(s) were added to the master list — review them under "Manage Items".`
+// //   : `Imported ${data.rows_imported} item rows successfully.`;
+
+//   const payload = new FormData();
+//   payload.append('file', importFile.value);
+//   payload.append('asset', importAsset.value);
+//   payload.append('replace', importReplace.value ? '1' : '0');
+
+//   try {
+//     const { data } = await axios.post('/api/well-materials/import', payload);
+//     importSuccess.value = true;
+//     importMessage.value = `Imported ${data.rows_imported} item rows successfully.`;
+
+//     if (asset.value === importAsset.value) {
+//       await refreshAll();
+//     }
+
+//     setTimeout(() => {
+//       Modal.getInstance(document.getElementById('importMaterialsModal'))?.hide();
+//       importFile.value = null;
+//       importMessage.value = '';
+//     }, 1200);
+//   } catch (e) {
+//     importSuccess.value = false;
+//     importMessage.value = e.response?.data?.message || 'Import failed. Please check the file and try again.';
+//   } finally {
+//     importing.value = false;
+//   }
+// }
+
+
+
+
+// function exportToExcel() {
+//   const byWell = new Map();
+
+//   filteredRows.value.forEach((r) => {
+//     if (!byWell.has(r.well_name)) {
+//       byWell.set(r.well_name, {
+//         well_name: r.well_name, type: r.type, wi_well: r.wi_well, meters: r.meters,
+//         isHpht: false, items: {}, starts: [], finishes: [], statuses: [],
+//       });
+//     }
+//     const entry = byWell.get(r.well_name);
+//     if (r.hptp === 'HPHT') entry.isHpht = true;
+
+//     // Overwrite, not sum — a well material row can join against several
+//     // rig_details segments for the same well, which would otherwise
+//     // multiply the same quantity value once per matching segment.
+//     entry.items[r.item_name] = Number(r.quantity || 0);
+
+//     if (r.start_date) entry.starts.push(new Date(r.start_date));
+//     if (r.finish_date) entry.finishes.push(new Date(r.finish_date));
+//     if (r.status) entry.statuses.push(r.status.toString().trim().toUpperCase());
+//   });
+
+//   const wells = [...byWell.values()];
+
+//   // Order item columns by the master list for this asset; anything present
+//   // in the data but not yet in the master list (legacy rows) gets appended.
+//   const masterOrder = materialItems.value.map((i) => i.item_name);
+//   const dataItemNames = [...new Set(filteredRows.value.map((r) => r.item_name))];
+//   const itemNames = [
+//     ...masterOrder.filter((n) => dataItemNames.includes(n)),
+//     ...dataItemNames.filter((n) => !masterOrder.includes(n)),
+//   ];
+
+//   const exportRows = wells.map((w) => {
+//     const overallStart = w.starts.length ? new Date(Math.min(...w.starts)) : null;
+//     const overallFinish = w.finishes.length ? new Date(Math.max(...w.finishes)) : null;
+//     const allCompleted = w.statuses.length > 0 && w.statuses.every((s) => s === 'C');
+
+//     const row = {
+//       'Well Name': w.well_name, 'Input Type': w.type || '', 'Well Type': w.wi_well || '',
+//       'HPHT / Non-HPHT': w.isHpht ? 'HPHT' : 'Non-HPHT', 'Meters': w.meters ?? '',
+//     };
+//     itemNames.forEach((name) => { row[name] = w.items[name] ?? ''; });
+//     row['Start Date'] = formatDate(overallStart);
+//     row['Finish Date'] = formatDate(overallFinish);
+//     row['Status'] = allCompleted ? 'Completed' : (w.statuses.length ? 'In Progress' : '');
+//     return row;
+//   });
+
+//   const worksheet = XLSX.utils.json_to_sheet(exportRows);
+//   worksheet['!cols'] = [
+//     { wch: 16 }, { wch: 12 }, { wch: 12 }, { wch: 16 }, { wch: 10 },
+//     ...itemNames.map(() => ({ wch: 16 })), { wch: 14 }, { wch: 14 }, { wch: 12 },
+//   ];
+
+//   const workbook = XLSX.utils.book_new();
+//   XLSX.utils.book_append_sheet(workbook, worksheet, 'Well Materials');
+
+//   const stamp = new Date().toISOString().slice(0, 10);
+//   XLSX.writeFile(workbook, `well-materials-${asset.value || 'all'}-${stamp}.xlsx`);
+// }
+
 
 async function submitImport() {
   if (!importFile.value || !importAsset.value) return;
@@ -367,11 +561,17 @@ async function submitImport() {
   try {
     const { data } = await axios.post('/api/well-materials/import', payload);
     importSuccess.value = true;
-    importMessage.value = `Imported ${data.rows_imported} item rows successfully.`;
+    importMessage.value = data.new_items?.length
+      ? `Imported ${data.rows_imported} item rows. ${data.new_items.length} new item name(s) were added to the shared list.`
+      : `Imported ${data.rows_imported} item rows successfully.`;
 
-    if (asset.value === importAsset.value) {
-      await refreshAll();
-    }
+    // Switch the visible filter to whatever was just imported, then reload
+    // everything — so the result is on screen immediately, no manual
+    // refresh or re-selecting the asset required.
+    asset.value = importAsset.value;
+    selectedWells.value = [];
+    selectedQuarters.value = [];
+    await refreshAll();
 
     setTimeout(() => {
       Modal.getInstance(document.getElementById('importMaterialsModal'))?.hide();
@@ -386,35 +586,64 @@ async function submitImport() {
   }
 }
 
-function exportToExcel() {
-  const exportRows = filteredRows.value.map((r) => ({
-    'Asset': r.asset_name,
-    'Well Name': r.well_name,
-    // 'HPTP': r.hptp,
-    'HPHT': r.hptp,
-    'Type': r.type || '',
-    'Item Name': r.item_name,
-    'Quantity': r.quantity ?? '',
-    'Meters': r.meters ?? '',
-    'WI Well': r.wi_well || '',
-    'Start Date': formatDate(r.start_date),
-    'Finish Date': formatDate(r.finish_date),
-    'Status': isCompleted(r.status) ? 'Completed' : (r.status || ''),
-  }));
+async function exportToExcel() {
+  const byWell = new Map();
 
-  const worksheet = XLSX.utils.json_to_sheet(exportRows);
-  worksheet['!cols'] = [
-    { wch: 10 }, { wch: 16 }, { wch: 10 }, { wch: 10 }, { wch: 20 },
-    { wch: 10 }, { wch: 10 }, { wch: 10 }, { wch: 14 }, { wch: 14 }, { wch: 12 },
+  filteredRows.value.forEach((r) => {
+    if (!byWell.has(r.well_name)) {
+      byWell.set(r.well_name, {
+        well_name: r.well_name, type: r.type, wi_well: r.wi_well, meters: r.meters,
+        isHpht: false, items: {}, starts: [], finishes: [], statuses: [],
+      });
+    }
+    const entry = byWell.get(r.well_name);
+    if (r.hptp === 'HPHT') entry.isHpht = true;
+    entry.items[r.item_name] = Number(r.quantity || 0); // overwrite, never sum — see note below
+    if (r.start_date) entry.starts.push(new Date(r.start_date));
+    if (r.finish_date) entry.finishes.push(new Date(r.finish_date));
+    if (r.status) entry.statuses.push(r.status.toString().trim().toUpperCase());
+  });
+
+  const wells = [...byWell.values()];
+
+  const masterOrder = materialItems.value.map((i) => i.item_name);
+  const dataItemNames = [...new Set(filteredRows.value.map((r) => r.item_name))];
+  const itemNames = [
+    ...masterOrder.filter((n) => dataItemNames.includes(n)),
+    ...dataItemNames.filter((n) => !masterOrder.includes(n)),
   ];
 
-  const workbook = XLSX.utils.book_new();
-  XLSX.utils.book_append_sheet(workbook, worksheet, 'Well Materials');
+  const fixedHeaders = [
+    { key: 'well_name', label: 'Well Name', width: 18 },
+    { key: 'input_type', label: 'Input Type', width: 12 },
+    { key: 'well_type', label: 'Well Type', width: 12 },
+    { key: 'hpht', label: 'HPHT / Non-HPHT', width: 16 },
+    { key: 'meters', label: 'Drilling Meterage', width: 14 },
+    { key: 'start_date', label: 'Start Date', width: 14 },
+    { key: 'finish_date', label: 'Finish Date', width: 14 },
+    { key: 'status', label: 'Status', width: 12 },
+  ];
+  const itemHeaders = itemNames.map((name, idx) => ({ key: `item_${idx}`, label: name, width: 18 }));
+
+  const rows = wells.map((w) => {
+    const overallStart = w.starts.length ? new Date(Math.min(...w.starts)) : null;
+    const overallFinish = w.finishes.length ? new Date(Math.max(...w.finishes)) : null;
+    const allCompleted = w.statuses.length > 0 && w.statuses.every((s) => s === 'C');
+
+    const row = {
+      well_name: w.well_name, input_type: w.type || '', well_type: w.wi_well || '',
+      hpht: w.isHpht ? 'HPHT' : 'Non-HPHT', meters: w.meters ?? '',
+      start_date: formatDate(overallStart), finish_date: formatDate(overallFinish),
+      status: allCompleted ? 'Completed' : (w.statuses.length ? 'In Progress' : ''),
+    };
+    itemHeaders.forEach((h, idx) => { row[h.key] = w.items[itemNames[idx]] ?? ''; });
+    return row;
+  });
 
   const stamp = new Date().toISOString().slice(0, 10);
-  const filename = `well-materials-${asset.value || 'all'}-${stamp}.xlsx`;
-  XLSX.writeFile(workbook, filename);
+  await downloadWorkbook([...fixedHeaders, ...itemHeaders], rows, 'Well Materials', `well-materials-${asset.value || 'all'}-${stamp}.xlsx`);
 }
+
 </script>
 
 <style scoped>

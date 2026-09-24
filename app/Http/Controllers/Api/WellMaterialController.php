@@ -151,6 +151,26 @@ class WellMaterialController extends Controller
 
     // --- Wide-format import ---
 
+    // public function import(Request $request, WellMaterialsWideImporter $importer)
+    // {
+    //     $validated = $request->validate([
+    //         'asset'   => 'required|string|max:255',
+    //         'file'    => 'required|file|mimes:xlsx,xls|max:10240',
+    //         'replace' => 'nullable|boolean',
+    //     ]);
+
+    //     if ($request->boolean('replace')) {
+    //         WellMaterial::where('asset_name', $validated['asset'])->delete();
+    //     }
+
+    //     $count = $importer->import($request->file('file')->getRealPath(), $validated['asset']);
+
+    //     return response()->json([
+    //         'message' => 'Import successful',
+    //         'rows_imported' => $count,
+    //     ]);
+    // }
+
     public function import(Request $request, WellMaterialsWideImporter $importer)
     {
         $validated = $request->validate([
@@ -163,11 +183,12 @@ class WellMaterialController extends Controller
             WellMaterial::where('asset_name', $validated['asset'])->delete();
         }
 
-        $count = $importer->import($request->file('file')->getRealPath(), $validated['asset']);
+        $result = $importer->import($request->file('file')->getRealPath(), $validated['asset']);
 
         return response()->json([
             'message' => 'Import successful',
-            'rows_imported' => $count,
+            'rows_imported' => $result['imported'],
+            'new_items' => $result['new_items'],
         ]);
     }
 }

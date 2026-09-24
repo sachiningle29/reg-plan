@@ -29,6 +29,9 @@ import WellMaterials from '../pages/admin/WellMaterials.vue';
 import MaterialRequirement from '../pages/admin/MaterialRequirement.vue';
 
 
+import ManageMaterialItems from '../pages/admin/ManageMaterialItems.vue';
+
+
 
 const routes = [
   { path: '/', name: 'home', component: Home },
@@ -62,9 +65,11 @@ const routes = [
 
     //   { path: 'well-materials', name: 'admin-well-materials', component: WellMaterials },
 
-    { path: 'well-materials', name: 'admin-well-materials', component: WellMaterials },
+     { path: 'well-materials', name: 'admin-well-materials', component: WellMaterials },
 
-    { path: 'material-requirement', name: 'admin-material-requirement', component: MaterialRequirement },
+     { path: 'material-requirement', name: 'admin-material-requirement', component: MaterialRequirement },
+
+     { path: 'material-items', name: 'admin-material-items', component: ManageMaterialItems },
 
     ],
   },
@@ -80,10 +85,17 @@ const routes = [
   },
 ];
 
+// const router = createRouter({
+//   history: createWebHistory(),
+//   routes,
+// });
+
+//added on 9-9-26
 const router = createRouter({
-  history: createWebHistory(),
+  history: createWebHistory(import.meta.env.VITE_APP_BASE_URL || '/'),
   routes,
 });
+
 
 router.beforeEach(async (to) => {
   const auth = useAuthStore();

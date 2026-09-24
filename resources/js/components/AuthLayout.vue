@@ -62,6 +62,8 @@ defineProps({
 
   background:
     linear-gradient(180deg, rgba(15, 23, 42, 0.1) 0%, rgba(15, 23, 42, 0.7) 100%),
+    /* url('/images/rig4.jpg') center center / cover no-repeat; */
+
     url('/images/rig4.jpg') center center / cover no-repeat;
 
   image-rendering: -webkit-optimize-contrast;
