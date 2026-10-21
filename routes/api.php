@@ -62,6 +62,9 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::put('/rig-details/{rigDetail}', [RigDetailController::class, 'update']);
     //end
 
+    //added by sachin on28-9-26
+    Route::get('/rig-details/well-groups', [RigDetailController::class, 'wellGroups']);
+    //end
 
 
     Route::get('/well-materials/assets', [WellMaterialController::class, 'assets']);

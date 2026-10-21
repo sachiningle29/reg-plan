@@ -42,32 +42,7 @@
     <div class="card border-0 shadow-sm">
       <div class="card-body">
         <h6 class="mb-3">Existing Plans</h6>
-        <!-- <table class="table table-sm align-middle">
-          <thead class="table-light">
-            <tr>
-              <th>Plan Name</th>
-              <th>Type</th>
-              <th>Records</th>
 
-              <th class="text-center">Actions</th>
-
-            </tr>
-          </thead>
-          <tbody>
-            <tr v-for="p in plans" :key="p.plan_name + p.record_type">
-              <td>{{ p.plan_name }}</td>
-              <td>
-                <span class="badge" :class="p.record_type === 'planned' ? 'bg-info' : 'bg-success'">
-                  {{ p.record_type }}
-                </span>
-              </td>
-              <td>{{ p.total }}</td>
-            </tr>
-            <tr v-if="!plans.length">
-              <td colspan="3" class="text-center text-muted py-3">No plans imported yet</td>
-            </tr>
-          </tbody>
-        </table> -->
         <table class="table table-sm align-middle">
         <thead class="table-light">
             <tr>

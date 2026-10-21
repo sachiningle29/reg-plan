@@ -3,9 +3,9 @@
 //   WO: '#c9c94a',
 //   DEV: '#c661d6',
 //   EXP: '#4169e1',
-//   DEHIRE: '#475569',   // dark slate — clearly different from HIRE
-//   HIRE: '#b45309',     // burnt amber — clearly different from DEHIRE
-//   RM: '#94a3b8',       // muted blue-grey — rig move / blank / unclassified
+//   DEHIRE: '#475569',
+//   HIRE: '#b45309',
+//   RM: '#94a3b8',
 // };
 
 // export function colorForActivity(code) {
@@ -27,6 +27,17 @@
 //   return ASSET_PALETTE[Math.abs(hash) % ASSET_PALETTE.length];
 // }
 
+// const KNOWN_CODES = ['ST', 'WO', 'DEV', 'EXP', 'DEHIRE', 'HIRE'];
+
+// // The single definition of "what kind of segment is this" — used by the
+// // chart (for coloring/labeling) AND the dashboard (for stat counting),
+// // so the two can never disagree on what counts as real work vs a gap.
+// export function classifyActivity(row) {
+//   const raw = (row.type || row.activity || row.status || '').toString().toUpperCase().trim();
+//   if (!raw) return 'RM';
+//   return KNOWN_CODES.includes(raw) ? raw : 'RM';
+// }
+
 // export function detectHireStatus(row) {
 //   const fields = [row.platform, row.well_name, row.type, row.activity, row.status];
 //   for (const f of fields) {
@@ -36,11 +47,16 @@
 //   return null;
 // }
 
+
+
 export const activityColors = {
   ST: '#5bc0c0',
   WO: '#c9c94a',
   DEV: '#c661d6',
   EXP: '#4169e1',
+  DRILLING: '#fb923c',   // new: orange
+  'CAP REP': '#fb7185',  // new: coral
+  OOC: '#6fcf97',        // new: green
   DEHIRE: '#475569',
   HIRE: '#b45309',
   RM: '#94a3b8',
@@ -65,7 +81,8 @@ export function colorForAsset(name) {
   return ASSET_PALETTE[Math.abs(hash) % ASSET_PALETTE.length];
 }
 
-const KNOWN_CODES = ['ST', 'WO', 'DEV', 'EXP', 'DEHIRE', 'HIRE'];
+// Uppercase, because classifyActivity() uppercases the value before comparing.
+const KNOWN_CODES = ['ST', 'WO', 'DEV', 'EXP', 'DRILLING', 'CAP REP', 'OOC', 'DEHIRE', 'HIRE'];
 
 // The single definition of "what kind of segment is this" — used by the
 // chart (for coloring/labeling) AND the dashboard (for stat counting),
